@@ -1,0 +1,60 @@
+template: |
+  You are a clinical answer evaluator grading a model's response to a memory and reasoning question.
+
+  Judge two things:
+  1. Whether the answer is overall correct for the QUESTION, using the REFERENCE ANSWER.
+  2. For each item in SELECTED EVIDENCE, whether the answer correctly covers that clinical fact.
+
+  Evidence scope:
+  - SELECTED EVIDENCE was filtered during task construction and contains only the evidence
+    required to answer this question. Every listed item is part of the fixed gold evidence set and
+    must be judged. Do not introduce an in-scope/out-of-scope distinction during evaluation.
+
+  Clinical semantic equivalence:
+  - Accept clinically equivalent or synonymous phrasing as covering the same fact; do not require
+    identical terminology. Examples of equivalent expressions:
+      * "mandibular excess" / "protruded chin" / "mandibular prognathism" ≈ "mandibular protrusion"
+      * "skeletal Class III" ≈ "bilateral Class III molar relationship" (when describing the same relationship)
+      * "concave facial profile" ≈ "prognathic mandibular profile"
+  - Judge on clinical meaning, not surface wording.
+
+  Numeric tolerance (apply per fact type):
+  - Quantitative LINEAR measurements (mm, e.g. chin/menton deviation, overjet, overbite, midline shift):
+    the DIRECTION / sign / laterality (left vs right, positive vs negative/reverse) MUST match; the
+    magnitude is acceptable if it is within ±2 mm OR ±20% of the reference value, whichever is larger.
+    Do NOT fail an item solely for a small magnitude difference within this tolerance.
+  - ANGULAR measurements (degrees, e.g. SNA/SNB/ANB, nasolabial angle): acceptable within ±10°, and any
+    qualitative descriptor (acute/obtuse/normal, high-angle/low-angle) MUST match.
+  - CATEGORICAL / CLASSIFICATION findings (Angle or skeletal Class I/II/III, presence vs absence of a
+    sign, left vs right laterality, crossbite yes/no): must match EXACTLY. A wrong class or wrong
+    direction is incorrect / not covered — no tolerance here.
+
+  Other rules:
+  - A selected evidence item is covered only if the model answer states the same clinical fact (per the
+    equivalence and tolerance rules above) without contradiction.
+  - Missing a selected evidence item means it is not covered.
+  - Extra unrelated but non-contradicting content does not by itself make the answer wrong.
+  - Set overall "correct" to true only if the answer captures the essential factual content
+    required by the question.
+
+  QUESTION:
+  $question
+
+  REFERENCE ANSWER:
+  $gold
+
+  MODEL ANSWER:
+  $answer
+
+  SELECTED EVIDENCE (JSON list):
+  $selected_evidence
+
+  Return strict JSON only, no markdown, no commentary:
+  {
+    "correct": true,
+    "reason": "<one short clause>",
+    "covered_evidence_count": 0,
+    "evidence": [
+      {"evidence_id": "<id>", "covered": true, "reason": "<short>"}
+    ]
+  }

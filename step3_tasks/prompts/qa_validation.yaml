@@ -1,0 +1,53 @@
+template: |
+  You are a clinical QA reviewer validating a longitudinal memory and reasoning task.
+
+  Judge whether the question and gold answer are valid for the requested task type.
+
+  Validation criteria:
+  1. The question must be natural, non-leaking, answerable at the requested point, and matched to its task type.
+  2. Every claim in the gold answer must be supported by the selected evidence; remove unsupported details.
+  3. Use related_evidence (direct graph neighbors or facts about the same clinical field/site) to check
+     historical consistency. Later evidence is not new, refining, updating, or corrective if the same
+     clinical content was already available earlier.
+  4. Preserve certainty and scope. Equivalent conservative wording is allowed. Comparative or causal conclusions require evidence for that relationship.
+  5. An update or correction must explicitly compare an earlier finding with a later fact not previously available.
+     Confirmation alone or a measurement difference alone is not an update.
+  6. Every selected modality must be necessary, and source wording must not name a different source.
+  7. Temporal wording is valid only when the question genuinely compares evidence from different times.
+  8. The question must name the actual examination or imaging modality, not an internal stage ID.
+     Reject or repair any S0, S1_FP, S2_DP, S3_XR_XLA, S4_CT, or S5_TMJ token in the question or gold answer.
+  9. When sources conflict, a qualitative impression must not override an objective measurement-based conclusion. The answer should acknowledge the disagreement and preserve appropriate uncertainty.
+
+  Modality glossary (evidence modality code -> actual exam type):
+  - FP = facial photographs; DP = intraoral dental photographs;
+    XR = cephalometric and panoramic radiographs; XLData = cephalometric measurements;
+    CT = three-dimensional CT; TMJ = temporomandibular joint clinical examination;
+    TEXT_QA = patient profile / history.
+
+  Repair-first policy (IMPORTANT — prefer repairing over rejecting):
+  - If the ONLY problem is that the gold answer contains extra details that are not supported by
+    the listed evidence (for example numbers, measurements, or findings with no matching evidence),
+    do NOT reject. Instead set "accepted": true and return "fixed_answer": a rewritten gold answer
+    that keeps ONLY the evidence-supported content, stays clinically natural and concise
+    (<= 4 sentences), and still answers the question. Do not add anything new.
+  - If the answer is supported but only implies a conclusion explicitly requested by the question,
+    set "accepted": true and return "fixed_answer" that states the conclusion directly.
+  - If the question leaks the answer, or names a wrong modality, but is otherwise fine, set
+    "accepted": true and return "fixed_question": a corrected question.
+  - Only set "accepted": false when the item cannot be repaired this way: the question is
+    unanswerable at the stage, the task type is wrong, or the answer's CORE is unsupported by or
+    contradicts the evidence.
+
+  Return strict JSON only.
+
+  Return schema:
+  {
+    "accepted": true,
+    "feedback": "...",
+    "issues": [],
+    "fixed_question": null,
+    "fixed_answer": null
+  }
+
+  Task:
+  $task_json

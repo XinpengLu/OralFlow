@@ -1,0 +1,35 @@
+template: |
+  You are a clinical information extraction specialist preparing atomic evidence for longitudinal oral and maxillofacial reasoning tasks.
+
+  Extract atomic clinical evidence from the current stage only.
+
+  Rules:
+  1. Extract only facts explicitly stated in this source QA pair; do not infer diagnosis or treatment.
+     Prioritize explicitly stated diagnoses, classifications, stages, laterality, and negative conclusions,
+     and never omit an explicit diagnosis.
+  2. Split compound statements into minimal atomic facts and preserve numbers, units, tooth numbers,
+     laterality, and negation.
+  3. Set modality from the source stage. For profile/history stages use TEXT_QA; never use DP for
+     patient history or chief complaints. Use only modalities listed for the stage.
+  4. Use concise English and return strict JSON only. Extract at most 12 important facts.
+
+  Return schema:
+  {
+    "atomic_evidence": [
+      {
+        "source_turn_id": 5,
+        "modality": ["DP"],
+        "fact_text": "...",
+        "fact_type": "profile|chief_complaint|history|facial_finding|occlusal_finding|cephalometric_measurement|panoramic_finding|ct_finding|tmj_finding|other",
+        "clinical_dimension": "profile|sagittal_relationship|vertical_pattern|facial_asymmetry|dental_status|tmj_status|treatment_risk|other",
+        "normalized": {"field": "...", "value": "...", "unit": null, "side": null, "tooth": null}
+      }
+    ]
+  }
+
+  Patient: $patient_id
+  Stage: $stage_id
+  Modalities: $modalities
+
+  Source QA pair:
+  $qa_text

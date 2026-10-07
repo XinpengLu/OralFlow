@@ -1,0 +1,30 @@
+template: |
+  You are selecting previously available atomic evidence for an evaluation question derived from a longitudinal case report.
+
+  For a treatment question, select the smallest set that explains why the treatment decision was made. For a follow-up question, select the smallest set that supports the clinical assessment.
+
+  Rules:
+  1. Use only exact ids from the evidence catalog. Never invent evidence or use the authoritative answer itself as evidence.
+  2. Every selected item must support the treatment rationale or follow-up assessment; clinical association alone is insufficient.
+  3. For treatment questions, select the specific pre-decision findings that justify the decision. The evidence need not state the chosen treatment or its later result.
+  4. For follow-up and treatment-response questions, select the relevant baseline and available later findings needed for the stated comparison or assessment.
+  5. Preserve entity, anatomical site, timing, polarity, measurements, and uncertainty. Use graph edges to find connected baseline, intervention, and outcome facts, but return evidence ids rather than edges.
+  6. The catalog contains evidence selected from this case before the question timepoint. Return at least one clinically relevant evidence id; an empty list is invalid.
+  7. Return strict JSON only.
+
+  Return schema:
+  {
+    "required_evidence_ids": ["evidence_id_1", "evidence_id_2"]
+  }
+
+  Question:
+  $question
+
+  Authoritative answer used only to determine relevance:
+  $answer
+
+  Evidence catalog available before the question:
+  $evidence_text
+
+  Evidence graph edges among available evidence:
+  $edges_text

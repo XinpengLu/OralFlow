@@ -1,0 +1,54 @@
+template: |
+  You are repairing selected timepoints in a longitudinal oral or dental case-report timeline after whole-timeline verification.
+
+  Use only the supplied source. Fix every reviewer issue, but do not rewrite timepoints that are not implicated by the feedback. Each current timepoint has a zero-based timepoint_index.
+
+  Return only replacement patches. A patch replaces the inclusive range start_index..end_index with replacement_timepoints. It may replace one timepoint, merge several timepoints, split one timepoint, or delete an invalid timepoint with an empty replacement list. Keep unaffected content inside a repaired range unchanged unless a reviewer issue requires changing it. Preserve chronological order and the original timepoint schema; do not include timepoint_index inside replacement_timepoints.
+
+  Follow the same timeline rules as the original extraction:
+  - use only source-supported facts and preserve values, negations, anatomy, dates, and uncertainty;
+  - use the earliest reliably anchored event as t_months=0, merging undated prior history into that first anchored presentation without assigning it the date rather than creating an artificial undated origin; keep the timepoints array in clinical order; use a non-negative integer t_months only when an explicit date or anchored date/duration chain supports elapsed months from the origin; a duration relative to an event whose t_months is null must also remain null; otherwise use null when only relative order is known; never use a value from the current timeline as source evidence and never invent absolute months from treatment-cycle counts or disconnected relative phrases; prioritize exact calendar dates and date chains, then exact elapsed durations, while treating approximate total-follow-up phrases such as "about", "over", or "long-term" only as supporting context; if the source anchors remain incompatible, keep the value supported by the highest-priority anchor rather than cycling between values; treat durations as local or overlapping unless explicitly sequential;
+  - keep stages ordered perception -> treatment -> followup; a finding first observed immediately after a completed procedure belongs in a consecutive followup timepoint with the same t_months; once a post-treatment response starts followup, later interventions remain followup; repair the implicated stage boundary and later timepoints together; treatment answers exclude later follow-up facts;
+  - every followup contains at least one observation before any evaluation;
+  - image QAs cover only source-supported visible findings; if neither body text nor caption supplies any non-caption visual detail, omit that figure instead of inventing an answer; if one extracted multi-panel figure spans different dates and panels cannot be referenced separately, omit its whole figure QA; evaluation QAs have figure_ref=null;
+  - use only TEXT_QA for text QAs and FIGURE_QA for QAs with figure_ref; do not encode the figure type.
+
+  Return strict JSON only:
+  {
+    "repairs": [
+      {
+        "start_index": 0,
+        "end_index": 0,
+        "replacement_timepoints": [
+          {
+            "date_text": "source date or period",
+            "t_months": 0,
+            "stage_type": "perception | treatment | followup",
+            "modality": ["TEXT_QA", "FIGURE_QA"],
+            "qa_pairs": [
+              {
+                "role": "observation | evaluation",
+                "question": "paper-specific question",
+                "answer": "source-supported answer",
+                "figure_ref": "Figure N or null"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+
+  $feedback_block
+
+  ===== AVAILABLE FIGURES =====
+  $figures_block
+
+  ===== CURRENT INDEXED TIMELINE =====
+  $timeline_json
+
+  ===== SOURCE TABLES =====
+  $tables_text
+
+  ===== SOURCE TEXT =====
+  $fulltext
